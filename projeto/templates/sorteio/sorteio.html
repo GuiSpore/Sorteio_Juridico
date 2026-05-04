@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    <h1>Sorteio de Processos</h1>
+
+    <!-- Exibição de mensagens de Sucesso ou Erro -->
+    {% if messages %}
+        <div class="mensagens">
+            {% for message in messages %}
+                <div style="padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; 
+                    {% if message.tags == 'success' %}background-color: #d4edda; color: #155724;
+                    {% elif message.tags == 'error' %}background-color: #f8d7da; color: #721c24;{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <hr>
+
+    <!-- Formulário para cadastrar e sortear um processo -->
+    <h2>Cadastrar Novo Processo</h2>
+    <form method="POST" action="">
+        {% csrf_token %}
+        <div style="margin-bottom: 10px;">
+            <label for="numero">Número do Processo:</label><br>
+            <input type="text" id="numero" name="numero" required placeholder="Ex: 0001234-56.2026...">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label for="complexidade">Complexidade:</label><br>
+            <select id="complexidade" name="complexidade" required>
+                <option value="">-- Selecione o Nível --</option>
+                {% for valor, nome_nivel in niveis_complexidade %}
+                    <option value="{{ valor }}">{{ nome_nivel }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" style="padding: 8px 15px; cursor: pointer;">Sortear Juiz</button>
+    </form>
+
+    <hr>
+
+    <!-- Tabela / Placar de Juízes -->
+    <h2>Placar de Distribuição</h2>
+    <table border="1" cellpadding="8" cellspacing="0" style="width: 100%; max-width: 600px; text-align: center;">
+        <thead style="background-color: #f2f2f2;">
+            <tr>
+                <th style="text-align: left;">Juiz</th>
+                <th>Básico</th>
+                <th>Médio</th>
+                <th>Avançado</th>
+                <th>Total Geral</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for juiz in juizes_status %}
+            <tr>
+                <td style="text-align: left;"><strong>{{ juiz.nome }}</strong></td>
+                <td>{{ juiz.total_basico }}</td>
+                <td>{{ juiz.total_medio }}</td>
+                <td>{{ juiz.total_avancado }}</td>
+                <td>{{ juiz.total_geral }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5">Nenhum juiz encontrado. Cadastre-os no painel Admin.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+{% endblock %}
