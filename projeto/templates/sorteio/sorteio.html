@@ -38,7 +38,15 @@
             </select>
         </div>
 
-        <button type="submit" style="padding: 8px 15px; cursor: pointer;">Sortear Juiz</button>
+        <button type="submit" name="acao" value="cadastrar" style="padding: 8px 15px; cursor: pointer;">Cadastrar na Fila</button>
+    </form>
+
+    <hr>
+
+    <h2>Sorteio ({{ processos_pendentes|length }} processos aguardando)</h2>
+    <form method="POST" action="">
+        {% csrf_token %}
+        <button type="submit" name="acao" value="sortear" style="padding: 10px 20px; cursor: pointer; background-color: #28a745; color: white; border: none; font-weight: bold; border-radius: 4px;">Executar Sorteio Matemático</button>
     </form>
 
     <hr>
@@ -53,6 +61,7 @@
                 <th>Médio</th>
                 <th>Avançado</th>
                 <th>Total Geral</th>
+                <th>Peso (Pontuação)</th>
             </tr>
         </thead>
         <tbody>
@@ -63,10 +72,11 @@
                 <td>{{ juiz.total_medio }}</td>
                 <td>{{ juiz.total_avancado }}</td>
                 <td>{{ juiz.total_geral }}</td>
+                <td><strong>{{ juiz.peso_total }}</strong></td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="5">Nenhum juiz encontrado. Cadastre-os no painel Admin.</td>
+                <td colspan="6">Nenhum juiz encontrado. Cadastre-os no painel Admin.</td>
             </tr>
             {% endfor %}
         </tbody>

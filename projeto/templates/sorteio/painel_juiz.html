@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Painel do Juiz: {{ juiz.nome }}</h1>
+
+    {% if messages %}
+        <div class="mensagens">
+            {% for message in messages %}
+                <div class="msg-box {% if message.tags == 'success' %}msg-success{% elif message.tags == 'error' %}msg-error{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <h2>Meus Processos</h2>
+    <table class="table-placar">
+        <thead>
+            <tr>
+                <th class="text-left">Número</th>
+                <th>Complexidade</th>
+                <th>Data de Cadastro</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for processo in meus_processos %}
+            <tr>
+                <td class="text-left">{{ processo.numero }}</td>
+                <td>{{ processo.get_complexidade_display }}</td>
+                <td>{{ processo.data_cadastro|date:"d/m/Y H:i" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3">Você ainda não possui processos atribuídos.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <hr style="margin: 30px 0;">
+
+    <h2>Visualizar Processos de Outros Juízes</h2>
+    <form method="GET" action="">
+        <div class="form-group">
+            <label for="ver_juiz">Selecione um Juiz:</label><br>
+            <select id="ver_juiz" name="ver_juiz" onchange="this.form.submit()" style="padding: 5px; width: 100%; max-width: 300px;">
+                <option value="">-- Escolha um Juiz --</option>
+                {% for outro in outros_juizes %}
+                    <option value="{{ outro.id }}" {% if juiz_selecionado and juiz_selecionado.id == outro.id %}selected{% endif %}>
+                        {{ outro.nome }} {% if not outro.ativo %} (Inativo) {% endif %}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+
+    {% if juiz_selecionado %}
+        <h3 style="margin-top: 20px;">Processos de: {{ juiz_selecionado.nome }}</h3>
+        <table class="table-placar">
+            <thead>
+                <tr>
+                    <th class="text-left">Número</th>
+                    <th>Complexidade</th>
+                    <th>Data de Cadastro</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for processo in processos_outro_juiz %}
+                <tr>
+                    <td class="text-left">{{ processo.numero }}</td>
+                    <td>{{ processo.get_complexidade_display }}</td>
+                    <td>{{ processo.data_cadastro|date:"d/m/Y H:i" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3">Este juiz não possui processos no momento.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+{% endblock %}

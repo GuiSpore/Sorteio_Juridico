@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Painel do Assessor: {{ assessor.nome }}</h1>
+    <h3 style="color: #555;">Atuando pelo Juiz: {{ juiz.nome }}</h3>
+
+    {% if messages %}
+        <div class="mensagens">
+            {% for message in messages %}
+                <div class="msg-box {% if message.tags == 'success' %}msg-success{% elif message.tags == 'error' %}msg-error{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <hr style="margin: 20px 0;">
+
+    <h2>Processos do Juiz</h2>
+    <table class="table-placar">
+        <thead>
+            <tr>
+                <th class="text-left">Número</th>
+                <th>Complexidade</th>
+                <th>Data de Cadastro</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for processo in processos %}
+            <tr>
+                <td class="text-left">{{ processo.numero }}</td>
+                <td>{{ processo.get_complexidade_display }}</td>
+                <td>{{ processo.data_cadastro|date:"d/m/Y H:i" }}</td>
+                <td><button disabled style="padding: 5px 10px; cursor: not-allowed; background-color: #e0e0e0; border: 1px solid #ccc; border-radius: 4px;" title="Em desenvolvimento...">Solicitar Edição</button></td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4">O juiz ainda não possui processos atribuídos.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
