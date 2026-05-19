@@ -1,13 +1,13 @@
 from django.contrib import admin
-from .models import Juiz, Processo, Assessor, AssistenteJuridico
+from .models import Magistrado, Processo, Assessor, AssistenteJuridico
 
-@admin.register(Juiz)
-class JuizAdmin(admin.ModelAdmin):
+@admin.register(Magistrado)
+class MagistradoAdmin(admin.ModelAdmin):
     list_display = ('nome', 'user', 'ativo')
 
 @admin.register(Assessor)
 class AssessorAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'user', 'juiz')
+    list_display = ('nome', 'user', 'magistrado')
 
 @admin.register(AssistenteJuridico)
 class AssistenteJuridicoAdmin(admin.ModelAdmin):
@@ -15,6 +15,6 @@ class AssistenteJuridicoAdmin(admin.ModelAdmin):
 
 @admin.register(Processo)
 class ProcessoAdmin(admin.ModelAdmin):
-    list_display = ('numero', 'complexidade', 'juiz', 'status', 'data_cadastro')
-    list_filter = ('complexidade', 'status', 'juiz')
+    list_display = ('numero', 'complexidade', 'magistrado', 'status', 'data_cadastro')
+    list_filter = ('complexidade', 'status', 'magistrado')
     search_fields = ('numero',)

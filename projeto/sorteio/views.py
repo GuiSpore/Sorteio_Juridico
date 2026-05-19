@@ -7,13 +7,13 @@ from django.db.models.functions import Coalesce
 from django.db import IntegrityError
 from django.contrib.auth.decorators import login_required
 import random
-from .models import Juiz, Processo
+from .models import Magistrado, Processo
 
 @login_required
 def home(request):
-    # Se o usuário for um Juiz, redireciona automaticamente para o painel dele
-    if hasattr(request.user, 'juiz_profile'):
-        return redirect('painel_juiz')
+    # Se o usuário for um Magistrado, redireciona automaticamente para o painel dele
+    if hasattr(request.user, 'magistrado_profile'):
+        return redirect('painel_magistrado')
 
     # Se o usuário for um Assessor, redireciona para o painel dele
     if hasattr(request.user, 'assessor_profile'):
@@ -50,34 +50,34 @@ def home(request):
             if qtd_sorteados == 0:
                 messages.warning(request, "Nenhum processo aguardando sorteio.")
             else:
-                # Busca os juízes ativos e calcula o peso somando a complexidade dos processos deles
-                juizes_ativos = list(Juiz.objects.filter(ativo=True).annotate(
+                # Busca os magistrados ativos e calcula o peso somando a complexidade dos processos deles
+                magistrados_ativos = list(Magistrado.objects.filter(ativo=True).annotate(
                     peso_total=Coalesce(Sum('processos__complexidade'), 0)
                 ))
                 
-                if not juizes_ativos:
-                    messages.error(request, "Nenhum juiz ativo disponível para sorteio.")
+                if not magistrados_ativos:
+                    messages.error(request, "Nenhum magistrado ativo disponível para sorteio.")
                 else:
                     for processo in pendentes:
                         # 1. Encontra a menor pontuação total
-                        menor_peso = min(j.peso_total for j in juizes_ativos)
-                        # 2. Filtra os juízes empatados
-                        juizes_elegiveis = [j for j in juizes_ativos if j.peso_total == menor_peso]
+                        menor_peso = min(m.peso_total for m in magistrados_ativos)
+                        # 2. Filtra os magistrados empatados
+                        magistrados_elegiveis = [m for m in magistrados_ativos if m.peso_total == menor_peso]
                         # 3. Sorteia e atribui
-                        juiz_sorteado = random.choice(juizes_elegiveis)
-                        processo.juiz = juiz_sorteado
+                        magistrado_sorteado = random.choice(magistrados_elegiveis)
+                        processo.magistrado = magistrado_sorteado
                         processo.status = 'Sorteado'
                         processo.save()
                         
-                        # 4. Atualiza o peso do juiz escolhido na memória para o próximo processo da fila
-                        juiz_sorteado.peso_total += processo.complexidade
+                        # 4. Atualiza o peso do magistrado escolhido na memória para o próximo processo da fila
+                        magistrado_sorteado.peso_total += processo.complexidade
                         
                     messages.success(request, f"{qtd_sorteados} processos foram sorteados com sucesso!")
                 
         return redirect('home')
 
     # Se for um acesso normal, preparar os dados para o "Placar"
-    juizes_status = Juiz.objects.annotate(
+    magistrados_status = Magistrado.objects.annotate(
         total_basico=Count('processos', filter=Q(processos__complexidade=1)),
         total_medio=Count('processos', filter=Q(processos__complexidade=2)),
         total_avancado=Count('processos', filter=Q(processos__complexidade=3)),
@@ -88,49 +88,49 @@ def home(request):
     processos_pendentes = Processo.objects.filter(status='Aguardando Sorteio')
 
     contexto = {
-        'juizes_status': juizes_status, 
+        'magistrados_status': magistrados_status, 
         'niveis_complexidade': Processo.NIVEIS_COMPLEXIDADE,
         'processos_pendentes': processos_pendentes
     }
     return render(request, 'sorteio/sorteio.html', contexto)
 
 @login_required
-def painel_juiz(request):
-    # Verifica se o usuário logado possui um perfil de juiz e não é superuser
-    if not hasattr(request.user, 'juiz_profile') and not request.user.is_superuser:
-        messages.error(request, "Acesso negado. Apenas juízes podem acessar este painel.")
+def painel_magistrado(request):
+    # Verifica se o usuário logado possui um perfil de magistrado e não é superuser
+    if not hasattr(request.user, 'magistrado_profile') and not request.user.is_superuser:
+        messages.error(request, "Acesso negado. Apenas magistrados podem acessar este painel.")
         return redirect('home')
         
     # Usa getattr para evitar erro (RelatedObjectDoesNotExist) caso seja o superuser sem perfil
-    juiz = getattr(request.user, 'juiz_profile', None)
+    magistrado = getattr(request.user, 'magistrado_profile', None)
     
-    if juiz:
-        meus_processos = Processo.objects.filter(juiz=juiz).order_by('-data_cadastro')
-        outros_juizes = Juiz.objects.exclude(id=juiz.id)
+    if magistrado:
+        meus_processos = Processo.objects.filter(magistrado=magistrado).order_by('-data_cadastro')
+        outros_magistrados = Magistrado.objects.exclude(id=magistrado.id)
     else:
         meus_processos = Processo.objects.none()
-        outros_juizes = Juiz.objects.all()
+        outros_magistrados = Magistrado.objects.all()
 
-    juiz_selecionado_id = request.GET.get('ver_juiz')
-    processos_outro_juiz = None
-    juiz_selecionado = None
+    magistrado_selecionado_id = request.GET.get('ver_magistrado')
+    processos_outro_magistrado = None
+    magistrado_selecionado = None
     
-    # Se o juiz selecionou outro juiz para visualizar os processos
-    if juiz_selecionado_id:
+    # Se o magistrado selecionou outro magistrado para visualizar os processos
+    if magistrado_selecionado_id:
         try:
-            juiz_selecionado = Juiz.objects.get(id=juiz_selecionado_id)
-            processos_outro_juiz = Processo.objects.filter(juiz=juiz_selecionado).order_by('-data_cadastro')
-        except Juiz.DoesNotExist:
+            magistrado_selecionado = Magistrado.objects.get(id=magistrado_selecionado_id)
+            processos_outro_magistrado = Processo.objects.filter(magistrado=magistrado_selecionado).order_by('-data_cadastro')
+        except Magistrado.DoesNotExist:
             pass
 
     contexto = {
-        'juiz': juiz or {'nome': 'Administrador (Visão Global)'},
+        'magistrado': magistrado or {'nome': 'Administrador (Visão Global)'},
         'meus_processos': meus_processos,
-        'outros_juizes': outros_juizes,
-        'processos_outro_juiz': processos_outro_juiz,
-        'juiz_selecionado': juiz_selecionado,
+        'outros_magistrados': outros_magistrados,
+        'processos_outro_magistrado': processos_outro_magistrado,
+        'magistrado_selecionado': magistrado_selecionado,
     }
-    return render(request, 'sorteio/painel_juiz.html', contexto)
+    return render(request, 'sorteio/painel_magistrado.html', contexto)
 
 @login_required
 def painel_assessor(request):
@@ -143,15 +143,15 @@ def painel_assessor(request):
     assessor = getattr(request.user, 'assessor_profile', None)
     
     if assessor:
-        juiz = assessor.juiz
-        processos = Processo.objects.filter(juiz=juiz).order_by('-data_cadastro')
+        magistrado = assessor.magistrado
+        processos = Processo.objects.filter(magistrado=magistrado).order_by('-data_cadastro')
     else:
-        juiz = None
+        magistrado = None
         processos = Processo.objects.all().order_by('-data_cadastro')
 
     contexto = {
         'assessor': assessor or {'nome': 'Administrador'},
-        'juiz': juiz or {'nome': 'Geral (Todos os Processos)'},
+        'magistrado': magistrado or {'nome': 'Geral (Todos os Processos)'},
         'processos': processos,
     }
     return render(request, 'sorteio/painel_assessor.html', contexto)

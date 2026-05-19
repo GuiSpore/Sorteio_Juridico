@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Painel do Juiz: {{ juiz.nome }}</h1>
+    <h1>Painel do Magistrado: {{ magistrado.nome }}</h1>
 
     {% if messages %}
         <div class="mensagens">
@@ -39,14 +39,14 @@
 
     <hr style="margin: 30px 0;">
 
-    <h2>Visualizar Processos de Outros Juízes</h2>
+    <h2>Visualizar Processos de Outros Magistrados</h2>
     <form method="GET" action="">
         <div class="form-group">
-            <label for="ver_juiz">Selecione um Juiz:</label><br>
-            <select id="ver_juiz" name="ver_juiz" onchange="this.form.submit()" style="padding: 5px; width: 100%; max-width: 300px;">
-                <option value="">-- Escolha um Juiz --</option>
-                {% for outro in outros_juizes %}
-                    <option value="{{ outro.id }}" {% if juiz_selecionado and juiz_selecionado.id == outro.id %}selected{% endif %}>
+            <label for="ver_magistrado">Selecione um Magistrado:</label><br>
+            <select id="ver_magistrado" name="ver_magistrado" onchange="this.form.submit()" style="padding: 5px; width: 100%; max-width: 300px;">
+                <option value="">-- Escolha um Magistrado --</option>
+                {% for outro in outros_magistrados %}
+                    <option value="{{ outro.id }}" {% if magistrado_selecionado and magistrado_selecionado.id == outro.id %}selected{% endif %}>
                         {{ outro.nome }} {% if not outro.ativo %} (Inativo) {% endif %}
                     </option>
                 {% endfor %}
@@ -54,8 +54,8 @@
         </div>
     </form>
 
-    {% if juiz_selecionado %}
-        <h3 style="margin-top: 20px;">Processos de: {{ juiz_selecionado.nome }}</h3>
+    {% if magistrado_selecionado %}
+        <h3 style="margin-top: 20px;">Processos de: {{ magistrado_selecionado.nome }}</h3>
         <table class="table-placar">
             <thead>
                 <tr>
@@ -65,7 +65,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for processo in processos_outro_juiz %}
+                {% for processo in processos_outro_magistrado %}
                 <tr>
                     <td class="text-left">{{ processo.numero }}</td>
                     <td>{{ processo.get_complexidade_display }}</td>
@@ -73,7 +73,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="3">Este juiz não possui processos no momento.</td>
+                    <td colspan="3">Este magistrado não possui processos no momento.</td>
                 </tr>
                 {% endfor %}
             </tbody>
